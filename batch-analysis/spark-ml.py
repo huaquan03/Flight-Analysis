@@ -19,7 +19,7 @@ spark = SparkSession \
 
 #doc data tu hdfs
 df = spark.read.option("header", True).csv("hdfs://localhost:9000/input/2017.csv")
-
+#Phan du doan delay
 #loc du lieu, chuyen doi 
 df_delay = df.select(month("FL_DATE").alias("MONTH"),
           dayofmonth("FL_DATE").alias("DAYOFMONTH"),
@@ -39,15 +39,14 @@ oneHotEncoder = OneHotEncoder(inputCols=["INDEX_CARRIER", "INDEX_ORIGIN", "INDEX
 assembler = VectorAssembler(inputCols=["MONTH", "DAYOFMONTH", "DAYOFWEEK", "ONEHOT_CARRIER", "ONEHOT_ORIGIN", "ONEHOT_DEST", "DISTANCE"], outputCol="FEATURES")
 
 scaler = StandardScaler(inputCol="FEATURES", outputCol="SCALED_FEATURES", withStd=True, withMean=True)#Stadard data
-
+#Train data
 train_data, test_data = df_delay.randomSplit([0.8, 0.2], seed=1234)
-#lr = RandomForestClassifier(labelCol='IS_DELAY', featuresCol='SCALED_FEATURES')
+#su dung model LinearSVC
 lr = LinearSVC(maxIter=10, regParam=0.1, labelCol="IS_DELAY", featuresCol="SCALED_FEATURES")
 my_stages = [indexer, oneHotEncoder, assembler, scaler, lr]
+#Tao pipepline
 pipeline = Pipeline(stages=my_stages)
-
 pipelineFit = pipeline.fit(train_data)
-
 result = pipelineFit.transform(test_data)
 predictionAndLabels = result.select("prediction", "IS_DELAY")
 evaluator = MulticlassClassificationEvaluator(metricName="accuracy").setLabelCol("IS_DELAY")
@@ -55,10 +54,10 @@ evaluator = MulticlassClassificationEvaluator(metricName="accuracy").setLabelCol
 print("Test set accuracy = " + str(evaluator.evaluate(predictionAndLabels)))
 
 predictionAndLabels.show(100)
-
+#Xuat ket qua vao hdfs
 pipeline.write().overwrite().save("hdfs://localhost:9000/output/models/delay_pipeline")
 
-#cancel
+#Phan du doan huy chuyen
 
 df_cancellation = df.select(month("FL_DATE").alias("MONTH"),
                                          dayofmonth("FL_DATE").alias("DAYOFMONTH"),
