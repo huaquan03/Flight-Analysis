@@ -17,10 +17,10 @@ spark = SparkSession \
     .config("spark.cassandra.auth.password", "cassandra") \
     .getOrCreate()
 
-#read data
+#doc data tu hdfs
 df = spark.read.option("header", True).csv("hdfs://localhost:9000/input/2017.csv")
 
-#filter data, convert datatype
+#loc du lieu, chuyen doi 
 df_delay = df.select(month("FL_DATE").alias("MONTH"),
           dayofmonth("FL_DATE").alias("DAYOFMONTH"),
           dayofweek("FL_DATE").alias("DAYOFWEEK"),
@@ -29,7 +29,7 @@ df_delay = df.select(month("FL_DATE").alias("MONTH"),
     .filter(col("ARR_DELAY").isNotNull()) \
     .filter(col("DISTANCE").isNotNull()) \
     .withColumn("IS_DELAY", (col("ARR_DELAY") > 0).cast("int")) \
-    .sample(fraction=0.1)
+    .sample(fraction=0.1)#so luong lay mau 0.1
 
 # Preprocessing
 indexer = StringIndexer(inputCols = ["OP_CARRIER", "ORIGIN", "DEST"], outputCols =["INDEX_CARRIER", "INDEX_ORIGIN", "INDEX_DEST"])
