@@ -1,3 +1,4 @@
+#import library
 from pyspark.ml.classification import LinearSVC, RandomForestClassifier, RandomForestClassificationModel, LinearSVCModel
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 from pyspark.sql import SparkSession
@@ -5,9 +6,9 @@ from pyspark.sql.functions import col, month, dayofweek, dayofmonth
 from pyspark.ml.feature import StandardScaler, StringIndexer, OneHotEncoder, VectorAssembler
 from pyspark.ml.pipeline import Pipeline, PipelineModel, PipelineWriter, PipelineReader, PipelineModelReader, PipelineModelWriter
 
-
+# define port cassandra
 cluster_seeds = ['localhost:9042', 'localhost:9043']
-
+#create session spark
 spark = SparkSession \
     .builder \
     .appName("Flight Batch Analysis") \
@@ -16,14 +17,10 @@ spark = SparkSession \
     .config("spark.cassandra.auth.password", "cassandra") \
     .getOrCreate()
 
+#read data
 df = spark.read.option("header", True).csv("hdfs://localhost:9000/input/2017.csv")
 
-"""
-========================================================================================
-Delay Prediction
-========================================================================================
-"""
-
+#filter data, convert datatype
 df_delay = df.select(month("FL_DATE").alias("MONTH"),
           dayofmonth("FL_DATE").alias("DAYOFMONTH"),
           dayofweek("FL_DATE").alias("DAYOFWEEK"),
@@ -58,11 +55,7 @@ predictionAndLabels.show(100)
 
 pipeline.write().overwrite().save("hdfs://localhost:9000/output/models/delay_pipeline")
 
-"""
-========================================================================================
-Cancellation Prediction
-========================================================================================
-"""
+#cancel
 
 df_cancellation = df.select(month("FL_DATE").alias("MONTH"),
                                          dayofmonth("FL_DATE").alias("DAYOFMONTH"),
