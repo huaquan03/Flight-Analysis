@@ -29,13 +29,16 @@ df_delay = df.select(month("FL_DATE").alias("MONTH"),
     .filter(col("ARR_DELAY").isNotNull()) \
     .filter(col("DISTANCE").isNotNull()) \
     .withColumn("IS_DELAY", (col("ARR_DELAY") > 0).cast("int")) \
-    .sample(fraction=0.1)#so luong lay mau 0.1
+    .sample(fraction=0.1)
 
-# Preprocessing
+# Tien xu ly
+#Converse string to int
 indexer = StringIndexer(inputCols = ["OP_CARRIER", "ORIGIN", "DEST"], outputCols =["INDEX_CARRIER", "INDEX_ORIGIN", "INDEX_DEST"])
+#Ma hoa du lieu
 oneHotEncoder = OneHotEncoder(inputCols=["INDEX_CARRIER", "INDEX_ORIGIN", "INDEX_DEST"], outputCols=["ONEHOT_CARRIER", "ONEHOT_ORIGIN", "ONEHOT_DEST"])
 assembler = VectorAssembler(inputCols=["MONTH", "DAYOFMONTH", "DAYOFWEEK", "ONEHOT_CARRIER", "ONEHOT_ORIGIN", "ONEHOT_DEST", "DISTANCE"], outputCol="FEATURES")
-scaler = StandardScaler(inputCol="FEATURES", outputCol="SCALED_FEATURES", withStd=True, withMean=True)
+
+scaler = StandardScaler(inputCol="FEATURES", outputCol="SCALED_FEATURES", withStd=True, withMean=True)#Stadard data
 
 train_data, test_data = df_delay.randomSplit([0.8, 0.2], seed=1234)
 #lr = RandomForestClassifier(labelCol='IS_DELAY', featuresCol='SCALED_FEATURES')
