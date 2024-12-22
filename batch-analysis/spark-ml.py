@@ -69,15 +69,14 @@ df_cancellation = df.select(month("FL_DATE").alias("MONTH"),
                                         .sample(fraction=0.1)
 
 
-# Preprocessing
+# Tien xu ly
 indexer = StringIndexer(inputCols = ["OP_CARRIER", "ORIGIN", "DEST"], outputCols =["INDEX_CARRIER", "INDEX_ORIGIN", "INDEX_DEST"])
 oneHotEncoder = OneHotEncoder(inputCols=["INDEX_CARRIER", "INDEX_ORIGIN", "INDEX_DEST"], outputCols=["ONEHOT_CARRIER", "ONEHOT_ORIGIN", "ONEHOT_DEST"])
 assembler = VectorAssembler(inputCols=["MONTH", "DAYOFMONTH", "DAYOFWEEK", "ONEHOT_CARRIER", "ONEHOT_ORIGIN", "ONEHOT_DEST", "DISTANCE"], outputCol="FEATURES")
 scaler = StandardScaler(inputCol="FEATURES", outputCol="SCALED_FEATURES", withStd=True, withMean=True)
 
 train_data, test_data = df_cancellation.randomSplit([0.8, 0.2], seed=1234)
-
-#lr = RandomForestClassifier(labelCol='CANCELLED', featuresCol='SCALED_FEATURES')
+#su dung model LinearSVC
 lr = LinearSVC(maxIter=10, regParam=0.1, labelCol="CANCELLED", featuresCol="SCALED_FEATURES")
 my_stages = [indexer, oneHotEncoder, assembler, scaler, lr]
 pipeline = Pipeline(stages=my_stages)
@@ -89,7 +88,7 @@ predictionAndLabels = result.select("prediction", "CANCELLED")
 evaluator = MulticlassClassificationEvaluator(metricName="accuracy").setLabelCol("CANCELLED")
 
 print("Test set accuracy = " + str(evaluator.evaluate(predictionAndLabels)))
-
+#Xuat ket qua vao hdfs
 predictionAndLabels.show(100)
 
 pipeline.write().overwrite().save("hdfs://localhost:9000/output/models/cancellation_pipeline")
